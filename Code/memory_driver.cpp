@@ -12,7 +12,6 @@
 #define CACHE_WAYS 1
 #define BLOCK_SIZE 1 // bytes per block
 #define DM 0
-//#define FA 1
 #define SA 1
 
 
@@ -37,7 +36,7 @@ int main(int argc,
     string filename = argv[1];
 
     // mode for replacement policy
-    int type;
+    //int cacheType;
 
     ifstream fin;
 
@@ -48,48 +47,52 @@ int main(int argc,
         exit(1);
     }
 
-    if (argc > 2) {
-        type = stoi(
-            argv[2]); // the input could be either 0, 1, or 2 (for DM, FA, and SA)
-    }
-    else {
-        type = 0; // the default is DM.
-    }
-
 
     // reading the text file
     string line;
     vector<trace> myTrace;
     int TraceSize = 0;
     string s1, s2, s3, s4;
+
+    //read trace and put each line of trace in vector
     while (getline(fin, line)) {
+        //get trace line
         stringstream ss(line);
         getline(ss, s1, ',');
         getline(ss, s2, ',');
         getline(ss, s3, ',');
         getline(ss, s4, ',');
-        myTrace.push_back(trace());
-        myTrace[TraceSize].MemR = stoi(s1);
+
+        //push back empty trace
+        myTrace.push_back(trace());  
+
+        //assign values to empty trace
+        myTrace[TraceSize].MemR = stoi(s1); 
         myTrace[TraceSize].MemW = stoi(s2);
         myTrace[TraceSize].adr = stoi(s3);
         myTrace[TraceSize].data = stoi(s4);
         //cout<<myTrace[TraceSize].MemW << endl;
+        
+        //tracks which trace we are on
         TraceSize += 1;
     }
 
-    auto mc = memory_controller(type);
+    auto mc = memory_controller();
 
     // counters for miss rate
-    int accessL = 0;
-    int accessS = 0;
+    int cacheLW = 0;
+    int cacheSW = 0;
+
     int status = 1;
     int clock = 0;
+
     int traceCounter = 0;
     bool cur_MemR;
     bool cur_MemW;
     int cur_adr;
     int cur_data;
     // this is the main loop of the code
+    //go back through trace and perform operations
     while (traceCounter < TraceSize) {
         if (status == 1) {
             cur_MemR = myTrace[traceCounter].MemR;
@@ -98,9 +101,9 @@ int main(int argc,
             cur_adr = myTrace[traceCounter].adr;
             traceCounter += 1;
             if (cur_MemR == 1)
-                accessL += 1;
+                cacheLW += 1;
             else if (cur_MemW == 1)
-                accessS += 1;
+                cacheSW += 1;
         }
         // YOUR CODE
         status = mc.clock_cycle(cur_MemR, cur_MemW, cur_data, cur_adr);
@@ -111,13 +114,16 @@ int main(int argc,
         status = mc.clock_cycle(cur_MemR, cur_MemW, cur_data, cur_adr);
         clock += 1;
     }
-    float miss_rate = mc.get_miss_count() / (float)accessL;
+    float da_miss_rate = mc.get_da_miss_count() / (float)cacheLW;
+    float sa_miss_rate = mc.get_sa_miss_count() / (float)cacheLW;
 
     // printing the final result
-    std::cout << "(" << clock << ", " << miss_rate << ")" << endl;
-    std::cerr << "Miss count: " << mc.get_miss_count() << endl;
-    std::cerr << "Miss rate: " << miss_rate << endl;
-    std::cerr << "Total cycles: " << clock << endl;
+    cout << "(" << da_miss_rate << "," << sa_miss_rate << ")" << endl;
+    /*cout<< "(" << da_miss_rate <<","<<sa_miss_rate<<","<<AAT<<")"<<endl;*/
+    //std::cout << "(" << clock << ", " << miss_rate << ")" << endl;
+    //std::cerr << "Miss count: " << mc.get_miss_count() << endl;
+    //std::cerr << "Miss rate: " << miss_rate << endl;
+    //std::cerr << "Total cycles: " << clock << endl;
 
     // closing the file
     fin.close();

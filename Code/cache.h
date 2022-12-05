@@ -3,42 +3,50 @@
 
 #include <iostream>
 
-#define MEM_SIZE 2048 // bytes
+#define MEM_SIZE 4096 // bytes
 #define CACHE_SETS 16
 #define DM 0
-//#define FA 1
 #define SA 1
 
 class memory_controller {
 
 public:
-    explicit memory_controller(int cache_type);
+    explicit memory_controller();
 
-    ~memory_controller();
+    //~memory_controller();
 
     int clock_cycle(bool cur_MemR, bool cur_MemW, int& cur_data, int cur_adr);
 
-    int get_miss_count() const;
+    int get_da_miss_count() const;
+    int get_sa_miss_count() const;
 
     int get_hit_count() const;
 
 private:
-    struct cache_set {
+    struct cache_element {
         int tag; // you need to compute offset and index to find the tag.
         int lru_position; // for FA and SA only
         int data; // the actual data stored in the cache/memory
     };
 
-    int type;
+    //int cacheType;
     int status;
-    int miss_count;
-    int hit_count;
-    int myMem[MEM_SIZE]{};
-    cache_set myCache[CACHE_SETS]{};
 
-    void load_word(int& cur_data, int cur_adr);
+    int daMissCount;
+    int saMissCount;
+    int hitCount;
 
-    void store_word(int& cur_data, int cur_adr);
+    int Mem[MEM_SIZE]{};
+    cache_element L1Cache[16]{}; //16 elements
+    cache_element L2Cache[128]{};  //16*8=128 elements
+    
+    void printCache();
+
+    void load_word_L1(int& cur_data, int cur_adr);
+    void load_word_L2(int& cur_data, int cur_adr);
+
+    void store_word_L1(int& cur_data, int cur_adr);
+    void store_word_L2(int& cur_data, int cur_adr);
 };
 
 
