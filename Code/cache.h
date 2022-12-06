@@ -35,6 +35,8 @@ private:
     int daMissCount;
     int saMissCount;
     int hitCount;
+    int L1HitCount;
+    int L2HitCount;
 
     int Mem[MEM_SIZE]{};
     cache_element L1Cache[16]{}; //16 elements
@@ -47,6 +49,9 @@ private:
 
     void store_word_L1(int& cur_data, int cur_adr);
     void store_word_L2(int& cur_data, int cur_adr);
+
+    void insert_L1(int& cur_data, int cur_adr);
+    void insert_L2(int& cur_data, int cur_adr);
 };
 
 

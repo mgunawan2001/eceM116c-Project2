@@ -94,7 +94,7 @@ int main(int argc,
     // this is the main loop of the code
     //go back through trace and perform operations
     while (traceCounter < TraceSize) {
-        if (status == 1) {
+        //if (status == 1) {
             cur_MemR = myTrace[traceCounter].MemR;
             cur_MemW = myTrace[traceCounter].MemW;
             cur_data = myTrace[traceCounter].data;
@@ -104,7 +104,7 @@ int main(int argc,
                 cacheLW += 1;
             else if (cur_MemW == 1)
                 cacheSW += 1;
-        }
+        //}
         // YOUR CODE
         status = mc.clock_cycle(cur_MemR, cur_MemW, cur_data, cur_adr);
         clock += 1;
