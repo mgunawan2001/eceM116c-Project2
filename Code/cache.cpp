@@ -5,10 +5,14 @@ using namespace std;
 
 // Constructor that initialized the cache
 memory_controller::memory_controller() {
-    status = 1;
-    daMissCount = 0;
-    saMissCount = 0;
-    hitCount = 0;
+    L1MissCount = 0;
+    L2MissCount = 0;
+
+    L1HitCount = 0;
+    L2HitCount = 0;
+
+    L1AccessCount = 0;
+    L2AccessCount = 0;
 
     //initialize cache with empty elements
     for (int i = 0; i < 16; i++) {
@@ -27,18 +31,8 @@ memory_controller::memory_controller() {
 // Deconstructor
 //memory_controller::~memory_controller() = default;
 
-// Representative of one clock cycle. Takes an action based on the "status" of
-// the cache along with the passed in parameters.
-int memory_controller::clock_cycle(bool cur_MemR, bool cur_MemW, int& cur_data,
+void memory_controller::clock_cycle(bool cur_MemR, bool cur_MemW, int& cur_data,
     int cur_adr) {
-
-    //// Stall for a cycle until ready
-    //if (status < 1) {
-    //    if (status == 0) {
-    //        cur_data = Mem[cur_adr];
-    //    }
-    //    ++status;
-    //}
 
     // Memory ready (LW)
     if (cur_MemR == 1) {
@@ -71,24 +65,41 @@ int memory_controller::clock_cycle(bool cur_MemR, bool cur_MemW, int& cur_data,
     for (int j = 0; j < 128; j++) {
         cout << L2Cache[j].tag << ", ";
     }
-    cout << endl << endl;
+    cout << endl;
 
-    return status;
+    cout << "L2 LRU: ";
+    for (int j = 0; j < 128; j++) {
+        cout << L2Cache[j].lru_position << ", ";
+    }
+
+    cout << endl << endl;
 }
 
 // Returns direct associate miss count
-int memory_controller::get_da_miss_count() const {
-    return daMissCount;
+int memory_controller::get_L1_miss_count() const {
+    return L1MissCount;
 }
 
 // Returns set associate miss count
-int memory_controller::get_sa_miss_count() const {
-    return saMissCount;
+int memory_controller::get_L2_miss_count() const {
+    return L2MissCount;
 }
 
 // Made for debugging. Returns hit count.
-int memory_controller::get_hit_count() const {
-    return hitCount;
+int memory_controller::get_L1_hit_count() const {
+    return L1HitCount;
+}
+
+int memory_controller::get_L2_hit_count() const {
+    return L2HitCount;
+}
+
+int memory_controller::get_L1_access_count() const {
+    return L1AccessCount;
+}
+
+int memory_controller::get_L2_access_count() const {
+    return L2AccessCount;
 }
 
 //inserts new data into L1 and moves old data to L2. Also updates mem
@@ -99,6 +110,7 @@ void memory_controller::insert_L1(int& cur_data, int cur_adr) {
 
     //if index already contains data, move data to L2
     if (L1Cache[da_cur_index].tag != -1) {
+        
         input_adr = (L1Cache[da_cur_index].tag << 4) + da_cur_index;
         insert_L2(L1Cache[da_cur_index].data, input_adr);
     }
@@ -113,17 +125,25 @@ void memory_controller::insert_L2(int& cur_data, int cur_adr) {
     int sa_cur_tag = cur_adr >> 4;
     int sa_cur_set_index = (cur_adr & 0xF) * 8;
 
+    cout << "tag: " << sa_cur_tag << endl;
+
     int updated = -1;
 
+    
+
     for (int i = sa_cur_set_index; i < sa_cur_set_index + 8; i++) {
-        if (L2Cache[i].tag == -1 or L2Cache[i].lru_position == 0) {
-            //load data from memory into cache
-            L2Cache[i].data = cur_data;
-            L2Cache[i].tag = sa_cur_tag;
-            L2Cache[i].lru_position = 7;
+        /*if (L2Cache[sa_cur_set_index + i].tag == sa_cur_tag) {
+            L2Cache[sa_cur_set_index + i].data = cur_data;
+            L2Cache[sa_cur_set_index + i].tag = sa_cur_tag;
+            L2Cache[sa_cur_set_index + i].lru_position = 7;
+            updated = i;
+            break;
+        }*/
+        if (L2Cache[sa_cur_set_index + i].tag == -1 or L2Cache[sa_cur_set_index + i].lru_position == 0) {
+            L2Cache[sa_cur_set_index + i].data = cur_data;
+            L2Cache[sa_cur_set_index + i].tag = sa_cur_tag;
+            L2Cache[sa_cur_set_index + i].lru_position = 7;
 
-
-            status = -3;
             updated = i; //for lru replacement
             break;
         }
@@ -140,7 +160,8 @@ void memory_controller::insert_L2(int& cur_data, int cur_adr) {
 
 /*Direct Associate LW*/
 void memory_controller::load_word_L1(int& cur_data, int cur_adr) {
-    
+        L1AccessCount++;
+
         //get tag and index from address
         int da_cur_tag = cur_adr >> 4;
         int da_cur_index = (cur_adr & 0xF)%16;
@@ -150,15 +171,16 @@ void memory_controller::load_word_L1(int& cur_data, int cur_adr) {
         //if cache hit get data and return
         if (L1Cache[da_cur_index].tag == da_cur_tag) { 
             cout << "lw L1 hit" << endl;
+            L1HitCount++;            
+
             cur_data = L1Cache[da_cur_index].data;   //get data if found in cache
-            hitCount++;
-            status = 1;
         }
 
         //if cache miss go to L2
         else {
             cout << "lw L1 miss, ";
-            daMissCount++;
+            L1MissCount++;
+
             load_word_L2(cur_data, cur_adr);
         }
 
@@ -166,6 +188,7 @@ void memory_controller::load_word_L1(int& cur_data, int cur_adr) {
 
 /*Set Associate LW*/
 void memory_controller::load_word_L2(int& cur_data, int cur_adr) {
+    L2AccessCount++;
 
     int sa_cur_tag = cur_adr >> 4;
     int sa_cur_set_index = (cur_adr & 0xF) * 8;
@@ -180,8 +203,8 @@ void memory_controller::load_word_L2(int& cur_data, int cur_adr) {
         //cache hit!
         if (L2Cache[sa_cur_set_index + i].tag == sa_cur_tag) {
             cout << "lw L2: hit " << endl;
-            hitCount++;
-            status = 1;
+            L2HitCount++;
+            
 
             //get data
             cur_data = L2Cache[sa_cur_set_index + i].data;
@@ -195,8 +218,7 @@ void memory_controller::load_word_L2(int& cur_data, int cur_adr) {
     // No hit was found - Cache miss. Evict LRU and replace with data from memory
     if (hit == 0) {
         cout << "lw L2: miss " << endl;
-        saMissCount++;
-        status = -3;
+        L2MissCount++;
 
         //get data from memory
         Mem[cur_adr] = cur_data;
@@ -208,7 +230,8 @@ void memory_controller::load_word_L2(int& cur_data, int cur_adr) {
 
 /*Direct associative SW*/
 void memory_controller::store_word_L1(int& cur_data, int cur_adr) {
-    
+        L1AccessCount++;
+
         //get tag and index from address
         int da_cur_tag = cur_adr >> 4;
         int da_cur_index = cur_adr & 0xF;
@@ -220,21 +243,26 @@ void memory_controller::store_word_L1(int& cur_data, int cur_adr) {
         //cache hit. 
         if (L1Cache[da_cur_index].tag == da_cur_tag) {
             cout << "sw L1: hit" << endl;
+            L1HitCount++;            
+
             L2Cache[da_cur_index].data = cur_data;
             L2Cache[da_cur_index].tag = da_cur_tag;
         }
 
         else {
             cout << "sw L1: miss, ";
+            L1MissCount++;
+
             store_word_L2(cur_data,cur_adr);
         }
-        status = 1;
         cur_data = 0;
         
 }
 
 /*Set associative SW*/
 void memory_controller::store_word_L2(int& cur_data, int cur_adr) {
+    L2AccessCount++;
+
     int hit = 0;
     int sa_cur_tag = cur_adr >> 4;
     int sa_cur_set_index = (cur_adr & 0xF) * 8; //goes to index of first element in set 
@@ -243,6 +271,7 @@ void memory_controller::store_word_L2(int& cur_data, int cur_adr) {
         //cache hit
         if (L2Cache[sa_cur_set_index + i].tag == sa_cur_tag) {
             cout << "sw L2: hit" << endl;
+            L2HitCount++;
 
             insert_L1(L2Cache[sa_cur_set_index + i].data, cur_adr);
         
@@ -253,6 +282,7 @@ void memory_controller::store_word_L2(int& cur_data, int cur_adr) {
 
     if (hit == 0) {
         cout << "sw L2: miss " << endl;
+        L2MissCount++;
     }
 }
 

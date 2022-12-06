@@ -15,12 +15,16 @@ public:
 
     //~memory_controller();
 
-    int clock_cycle(bool cur_MemR, bool cur_MemW, int& cur_data, int cur_adr);
+    void clock_cycle(bool cur_MemR, bool cur_MemW, int& cur_data, int cur_adr);
 
-    int get_da_miss_count() const;
-    int get_sa_miss_count() const;
+    int get_L1_miss_count() const;
+    int get_L2_miss_count() const;
 
-    int get_hit_count() const;
+    int get_L1_hit_count() const;
+    int get_L2_hit_count() const;
+
+    int get_L1_access_count() const;
+    int get_L2_access_count() const;
 
 private:
     struct cache_element {
@@ -29,14 +33,11 @@ private:
         int data; // the actual data stored in the cache/memory
     };
 
-    //int cacheType;
-    int status;
 
-    int daMissCount;
-    int saMissCount;
-    int hitCount;
-    int L1HitCount;
-    int L2HitCount;
+    //declare count variables
+    int L1MissCount, L2MissCount;
+    int L1HitCount, L2HitCount;
+    int L1AccessCount,  L2AccessCount;
 
     int Mem[MEM_SIZE]{};
     cache_element L1Cache[16]{}; //16 elements
