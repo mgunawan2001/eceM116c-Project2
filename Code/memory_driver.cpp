@@ -71,54 +71,39 @@ int main(int argc,
         myTrace[TraceSize].MemW = stoi(s2);
         myTrace[TraceSize].adr = stoi(s3);
         myTrace[TraceSize].data = stoi(s4);
-        //cout<<myTrace[TraceSize].MemW << endl;
         
         //tracks which trace we are on
         TraceSize += 1;
     }
 
-    auto mc = memory_controller();
-
-    // counters for miss rate
-    int cacheLW = 0;
-    int cacheSW = 0;
-
-    int clock = 0;
+    auto myCache = memory_controller();
 
     int traceCounter = 0;
     bool cur_MemR;
     bool cur_MemW;
     int cur_adr;
     int cur_data;
+
     // this is the main loop of the code
     //go back through trace and perform operations
     while (traceCounter < TraceSize) {
-            cur_MemR = myTrace[traceCounter].MemR;
-            cur_MemW = myTrace[traceCounter].MemW;
-            cur_data = myTrace[traceCounter].data;
-            cur_adr = myTrace[traceCounter].adr;
-            traceCounter += 1;
-            if (cur_MemR == 1)
-                cacheLW += 1;
-            else if (cur_MemW == 1)
-                cacheSW += 1;
+        cur_MemR = myTrace[traceCounter].MemR;
+        cur_MemW = myTrace[traceCounter].MemW;
+        cur_data = myTrace[traceCounter].data;
+        cur_adr = myTrace[traceCounter].adr;
+        traceCounter += 1;
       
-        mc.clock_cycle(cur_MemR, cur_MemW, cur_data, cur_adr);
-        clock += 1;
+        myCache.clock_cycle(cur_MemR, cur_MemW, cur_data, cur_adr);;
     }
 
-    //while (status < 1) { // to make sure that the last access is also done
-    //    status = mc.clock_cycle(cur_MemR, cur_MemW, cur_data, cur_adr);
-    //    clock += 1;
-    //}
-    cout << "L1 accesses: " << mc.get_L1_access_count() << endl;
-    cout << "L2 accesses: " << mc.get_L2_access_count() << endl;
+    /*cout << "L1 accesses: " << myCache.get_L1_access_count() << endl;
+    cout << "L2 accesses: " << myCache.get_L2_access_count() << endl;
 
-    cout << "L1 misses: " << mc.get_L1_miss_count() << endl;
-    cout << "L2 misses: " << mc.get_L2_miss_count() << endl;
+    cout << "L1 misses: " << myCache.get_L1_miss_count() << endl;
+    cout << "L2 misses: " << myCache.get_L2_miss_count() << endl;*/
 
-    float L1_miss_rate = mc.get_L1_miss_count() / (float)mc.get_L1_access_count();
-    float L2_miss_rate = mc.get_L2_miss_count() / (float)mc.get_L2_access_count();
+    float L1_miss_rate = myCache.get_L1_miss_count() / (float)myCache.get_L1_access_count();
+    float L2_miss_rate = myCache.get_L2_miss_count() / (float)myCache.get_L2_access_count();
 
     float AAT = 1 + (L1_miss_rate * (8 + (L2_miss_rate * (100))));
 

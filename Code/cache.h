@@ -28,9 +28,9 @@ public:
 
 private:
     struct cache_element {
-        int tag; // you need to compute offset and index to find the tag.
-        int lru_position; // for FA and SA only
-        int data; // the actual data stored in the cache/memory
+        int tag; 
+        int lru_position; 
+        int data; 
     };
 
 
@@ -39,20 +39,21 @@ private:
     int L1HitCount, L2HitCount;
     int L1AccessCount,  L2AccessCount;
 
+    //initialize Mem and Caches
     int Mem[MEM_SIZE]{};
     cache_element L1Cache[16]{}; //16 elements
     cache_element L2Cache[128]{};  //16*8=128 elements
-    
-    void printCache();
 
+    //load word functions
     void load_word_L1(int& cur_data, int cur_adr);
     void load_word_L2(int& cur_data, int cur_adr);
 
+    //store word functions
     void store_word_L1(int& cur_data, int cur_adr);
     void store_word_L2(int& cur_data, int cur_adr);
 
-    void insert_L1(int& cur_data, int cur_adr);
-    void insert_L2(int& cur_data, int cur_adr);
+    //function for updating L1 and L2 
+    void insert_L1(int& cur_data, int cur_adr, int swap);
 };
 
 
