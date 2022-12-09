@@ -96,13 +96,15 @@ int main(int argc,
         myCache.clock_cycle(cur_MemR, cur_MemW, cur_data, cur_adr);;
     }
 
-    /*cout << "L1 accesses: " << myCache.get_L1_access_count() << endl;
+ /*   cout << "L1 accesses: " << myCache.get_L1_access_count() << endl;
     cout << "L2 accesses: " << myCache.get_L2_access_count() << endl;
+    cout << "victim accesses: " << myCache.get_victim_access_count() << endl;
 
     cout << "L1 misses: " << myCache.get_L1_miss_count() << endl;
-    cout << "L2 misses: " << myCache.get_L2_miss_count() << endl;*/
+    cout << "L2 misses: " << myCache.get_L2_miss_count() << endl;
+    cout << "victim misses: " << myCache.get_victim_miss_count() << endl;*/
 
-    float L1_miss_rate = myCache.get_L1_miss_count() / (float)myCache.get_L1_access_count();
+    float L1_miss_rate = (myCache.get_L1_miss_count()-myCache.get_victim_hit_count()) / (float)myCache.get_L1_access_count();
     float L2_miss_rate = myCache.get_L2_miss_count() / (float)myCache.get_L2_access_count();
 
     float AAT = 1 + (L1_miss_rate * (8 + (L2_miss_rate * (100))));

@@ -19,12 +19,15 @@ public:
 
     int get_L1_miss_count() const;
     int get_L2_miss_count() const;
+    int get_victim_miss_count() const;
 
     int get_L1_hit_count() const;
     int get_L2_hit_count() const;
+    int get_victim_hit_count() const;
 
     int get_L1_access_count() const;
     int get_L2_access_count() const;
+    int get_victim_access_count() const;
 
 private:
     struct cache_element {
@@ -35,25 +38,32 @@ private:
 
 
     //declare count variables
-    int L1MissCount, L2MissCount;
-    int L1HitCount, L2HitCount;
-    int L1AccessCount,  L2AccessCount;
+    int L1MissCount, L2MissCount, victimMissCount;
+    int L1HitCount, L2HitCount, victimHitCount;
+    int L1AccessCount,  L2AccessCount, victimAccessCount;
 
     //initialize Mem and Caches
     int Mem[MEM_SIZE]{};
     cache_element L1Cache[16]{}; //16 elements
     cache_element L2Cache[128]{};  //16*8=128 elements
+    cache_element VictimCache[4]{}; 
 
     //load word functions
     void load_word_L1(int& cur_data, int cur_adr);
     void load_word_L2(int& cur_data, int cur_adr);
+    void load_word_victim(int& cur_data, int cur_adr);
 
     //store word functions
     void store_word_L1(int& cur_data, int cur_adr);
     void store_word_L2(int& cur_data, int cur_adr);
+    void store_word_victim(int& cur_data, int cur_adr);
 
     //function for updating L1 and L2 
-    void insert_L1(int& cur_data, int cur_adr, int swap);
+    void insert_L1_L2(int& cur_data, int cur_adr, int hit);
+    void insert_L1_victim(int& cur_data, int cur_adr, int victim_index, int hit);
+
+
+
 };
 
 
